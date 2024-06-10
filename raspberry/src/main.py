@@ -29,15 +29,16 @@ def ring_buzzer():
 
 
 def poll_buzzer():
-    # current_speed_limit = 20
-    # while(True):
+    current_speed_limit = 20
+    
+    while(True):
         # consume from mqtt
         # update speed limit
         
         # check curr speed > speed limit
         # if yes, ring_buzzer()
         
-        # sleep(1)
+        sleep(1)
 
 
 if __name__ == '__main__':
