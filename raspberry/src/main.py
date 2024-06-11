@@ -1,11 +1,28 @@
 from io import BytesIO
 from time import sleep
-from picamera import PiCamera
 from threading import Thread
 
+from picamera import PiCamera
 from gpiozero import Buzzer
+from dotenv import load_dotenv
+
+import pika
+import os
+
+load_dotenv()
 
 buzzer = Buzzer(17)
+
+# RabbitMQ Setup
+
+url = os.getenv("CLOUDAMQP_URL")
+params = pika.URLParameters(url)
+connection = pika.BlockingConnection(params)
+channel = connection.channel()
+
+channel.queue_declare(queue='video')
+channel.queue_declare(queue='speed')
+channel.queue_declare(queue='report')
 
 def poll_camera_capture():
     capture_stream = BytesIO()
@@ -15,8 +32,9 @@ def poll_camera_capture():
     
     while(True):
         camera.capture(capture_stream, 'jpeg')
+        capture_stream.seek(0)
+        channel.basic_publish(exchange='', routing_key='video', body=capture_stream.read())
         sleep(2)
-        # publish to rabbitmq
 
 
 def ring_buzzer():
