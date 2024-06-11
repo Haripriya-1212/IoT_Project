@@ -34,7 +34,7 @@ def poll_camera_capture():
         camera.capture(capture_stream, 'jpeg')
         capture_stream.seek(0)
         channel.basic_publish(exchange='', routing_key='video', body=capture_stream.read())
-        sleep(2)
+        sleep(1)
 
 
 def ring_buzzer():
@@ -46,30 +46,28 @@ def ring_buzzer():
     buzzer.off()
 
 
-def poll_buzzer():
-    current_speed_limit = 20
+current_speed = 20
+
+def callback(ch, method, properties, body):
+    global current_speed
     
-    while(True):
-        # consume from mqtt
-        # update speed limit
-        
-        # check curr speed > speed limit
-        # if yes, ring_buzzer()
-        
-        sleep(1)
+    speed_limit = int(body)
+
+    if current_speed > speed_limit:
+        ring_buzzer()
+        channel.basic_publish(exchange='', routing_key='report', body='Speeding Found!')
 
 
 if __name__ == '__main__':
     capture_thread = Thread(target=poll_camera_capture)
-    buzzer_thread = Thread(target=poll_buzzer)
     
     capture_thread.start()
-    buzzer_thread.start()
+    channel.basic_consume('speed', callback, auto_ack=True)
+
+    print("Running PiSpeedCam!")
     
-    print("Running")
-    
-    buzzer_thread.join()
+    channel.stop_consuming()
     capture_thread.join()
     
-    print('Finished')
+    print('Finished Running')
     
