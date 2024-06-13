@@ -86,7 +86,8 @@ def on_open(connection):
 
 
 url = os.getenv("CLOUDAMQP_URL")
-params = pika.URLParameters(url)
+# params = pika.URLParameters(url)
+params = pika.ConnectionParameters('localhost')
 connection = pika.SelectConnection(params, on_open_callback=on_open)
 channel = None
 capture_thread = None
