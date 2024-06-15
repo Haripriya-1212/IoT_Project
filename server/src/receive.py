@@ -1,4 +1,5 @@
-import pika, sys, os
+import pika, sys, os, smtplib
+from email.message import EmailMessage
 from threading import Thread
 from time import sleep
 from dotenv import load_dotenv
@@ -6,6 +7,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def main():
+    src_email = os.getenv('SRC_EMAIL')
+    src_email_password = os.getenv('SRC_EMAIL_PASSWORD')
+    dest_email = os.getenv('DEST_EMAIL')
+
+    smtp_server = smtplib.SMTP('smtp.gmail.com', 587);
+    smtp_server.starttls()
+    smtp_server.login(src_email, src_email_password)
+
     url = os.getenv("CLOUDAMQP_URL")
     params = pika.URLParameters(url)
     connection = pika.BlockingConnection(params)
@@ -27,8 +36,13 @@ def main():
 
 
     def report_callback(ch, method, properties, body):
-        print(f"Received Report: {body}")
-        # USE EMAIL TO SEND REPORT TO EMAIL AND STORE IT IN DATABASE
+        msg = EmailMessage()
+        msg['Subject'] = 'PiSpeedCam Report | Speed Limit Violation Detected'
+        msg['From'] = src_email
+        msg['To'] = dest_email
+        msg.set_content(body)
+
+        smtp_server.send_message(msg)
 
 
     channel.basic_consume(queue='video', on_message_callback=video_callback, auto_ack=True)
