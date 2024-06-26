@@ -25,14 +25,14 @@ pip install  kaggle
 kaggle datasets  download  -d  andrewmvd/road-sign-detection
 python ./src/preprocessing.py
 
-git clone  https://github.com/ultralytics/yolov5
-cd  yolov5
 python -m venv venv
 ./venv/Scripts/activate
 
 (venv) pip install  -r  requirements.txt
-(venv) pip uninstall  torch  torchvision  -y
-(venv) pip install  torch  torchvision  --index-url  https://download.pytorch.org/whl/cu121
+
+(venv) git clone  https://github.com/ultralytics/yolov5
+(venv) cd  yolov
+(venv) pip install  -r  requirements.txt
 
 (venv) python train.py --img 320  --batch 16  --epochs 50  --data VOC.yaml --weights yolov5s.pt --workers 2
 ```

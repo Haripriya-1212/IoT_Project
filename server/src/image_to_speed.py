@@ -7,6 +7,7 @@ import re
 
 tess.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 model = torch.hub.load('ultralytics/yolov5', 'custom', path='yolov5/runs/train/exp11/weights/best.pt')
+wait_count = 0
 
 def bytes_to_cv2_image(image_bytes):
     np_array = np.frombuffer(image_bytes, np.uint8)
@@ -41,7 +42,11 @@ def get_speed_limit(image):
 
 
 def image_to_speed(image_bytes):
-    global model
+    global model, wait_count
+
+    if wait_count is not 0:
+        wait_count = wait_count - 1
+        return None
 
     image = bytes_to_cv2_image(image_bytes)
     result = model(image)
@@ -76,4 +81,5 @@ def image_to_speed(image_bytes):
         print("No speed limit sign detected!")
         return None
     
-    return int(digits_only)
+    wait_count = 40
+    return digits_only

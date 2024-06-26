@@ -81,7 +81,7 @@ def main():
                 with speed_lock:
                     if current_speed > speed_limit:
                         ring_buzzer()
-                        channel.basic_publish(exchange='', routing_key='report', body='Speeding Found!')
+                        channel.basic_publish(exchange='', routing_key='report', body=f'Speeding Found! Going at {current_speed} KM/H. Speed Limit is {speed_limit} KM/H')
 
 
     channel.basic_consume(queue='speed', on_message_callback=speed_callback, auto_ack=True)

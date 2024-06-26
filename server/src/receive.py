@@ -28,12 +28,12 @@ def main():
 
 
     def video_callback(ch, method, properties, body):
-        print(f"Received Video Frame: {body}")
+        print(f"Received Video Frame!")
 
         speed = image_to_speed(body)
         
         if speed is not None:
-            channel.basic_publish(exchange='', routing_key='speed', body=str(speed))
+            channel.basic_publish(exchange='', routing_key='speed', body=speed)
 
 
     def report_callback(ch, method, properties, body):
@@ -51,6 +51,7 @@ def main():
 
     print(' [*] Waiting for messages. To exit press CTRL+C')
     channel.start_consuming()
+
 
 if __name__ == '__main__':
     try:
