@@ -1,5 +1,5 @@
 import pika, sys, os, serial
-from queueing import Queue
+from queue import Queue
 from threading import Thread
 from time import sleep
 from io import BytesIO

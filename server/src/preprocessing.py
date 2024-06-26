@@ -6,6 +6,7 @@ def convert_box(size, box):
     x, y, w, h = (box[0] + box[1]) / 2.0 - 1, (box[2] + box[3]) / 2.0 - 1, box[1] - box[0], box[3] - box[2]
     return x * dw, y * dh, w * dw, h * dh
 
+
 def convert_voc_to_yolo():
     for anno in os.listdir('./data/labels'):
         if anno.split('.')[1] == 'xml':
@@ -27,3 +28,6 @@ def convert_voc_to_yolo():
                     bb = convert_box((w, h), [float(xmlbox.find(x).text) for x in ('xmin', 'xmax', 'ymin', 'ymax')])
                     cls_id = names.index(cls)  # class id
                     out_file.write(" ".join([str(a) for a in (cls_id, *bb)]) + '\n')
+
+
+convert_voc_to_yolo()

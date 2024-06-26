@@ -16,9 +16,31 @@ To deactivate the virtual environment, run:
 ```bash
 deactivate
 ```
-## To Run Server
+
+##  To Run Server
+- Train the Model
+```bash
+cd  server
+pip install  kaggle
+kaggle datasets  download  -d  andrewmvd/road-sign-detection
+python ./src/preprocessing.py
+
+git clone  https://github.com/ultralytics/yolov5
+cd  yolov5
+python -m venv venv
+./venv/Scripts/activate
+
+(venv) pip install  -r  requirements.txt
+(venv) pip uninstall  torch  torchvision  -y
+(venv) pip install  torch  torchvision  --index-url  https://download.pytorch.org/whl/cu121
+
+(venv) python train.py --img 320  --batch 16  --epochs 50  --data VOC.yaml --weights yolov5s.pt --workers 2
+```
+- Run the receiver worker
 ```bash
 cd server
-npm i
-npm run start
+python -m venv venv
+./venv/Scripts/activate
+(venv) pip install -r requirements.txt
+(venv) python receive.py
 ```
