@@ -1,6 +1,6 @@
 import pika, sys, os, serial
 from queue import Queue
-from threading import Thread
+from threading import Thread, Lock
 from time import sleep
 from io import BytesIO
 
@@ -12,8 +12,8 @@ from gpiozero import Buzzer
 load_dotenv()
 
 def main():
-    speed_limit = Queue()
-    speed_limit.put(40)
+    speed_limit = 40
+    speed_lock = Lock()
     
     buzzer = Buzzer(17)
     
@@ -59,28 +59,29 @@ def main():
         nonlocal channel, speed_limit
         
         speed_lim_val = int(body)
-        print(f"Received Speed Limit: {speed_lim_val}")
 
-        speed_limit.get()
-        speed_limit.put(speed_lim_val)
+        with speed_lock:
+            speed_limit = speed_lim_val
+            print(f"Speed Limit Updated: {speed_limit}")
        
        
     def check_speed():
         nonlocal speed_limit
         
-        gprmc_info = "$GPRMC,"
         ser = serial.Serial("/dev/serial0")
         
         while True:
             data = (str)(ser.readline())
-            GPRMC_data = data.find(gprmc_info)
-            if(GPRMC_data>0):
+            GPRMC_data = data.find('$GPMRC,')
+            
+            if(GPRMC_data > 0):
                 knots = data.split(',')[7]
                 current_speed = float(knots) * 1.852
-                # speed_lim_val = Get speed limit from queue or some other method here
-                if current_speed > speed_lim_val:
-                    ring_buzzer()
-                    channel.basic_publish(exchange='', routing_key='report', body='Speeding Found!')
+
+                with speed_lock:
+                    if current_speed > speed_limit:
+                        ring_buzzer()
+                        channel.basic_publish(exchange='', routing_key='report', body='Speeding Found!')
 
 
     channel.basic_consume(queue='speed', on_message_callback=speed_callback, auto_ack=True)
