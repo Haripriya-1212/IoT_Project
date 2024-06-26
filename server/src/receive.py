@@ -4,6 +4,8 @@ from threading import Thread
 from time import sleep
 from dotenv import load_dotenv
 
+from image_to_speed import image_to_speed
+
 load_dotenv()
 
 def main():
@@ -28,11 +30,10 @@ def main():
     def video_callback(ch, method, properties, body):
         print(f"Received Video Frame: {body}")
 
-        # USE ML MODEL TO CHECK IF FRAME HAS SPEED SIGN
-        # IF NO, RETURN
-
-        # USE OPENCV TO EXTRACT SPEED LIMIT FROM FRAME AND PUBLISH IT
-        channel.basic_publish(exchange='', routing_key='speed', body='80')
+        speed = image_to_speed(body)
+        
+        if speed is not None:
+            channel.basic_publish(exchange='', routing_key='speed', body=str(speed))
 
 
     def report_callback(ch, method, properties, body):
