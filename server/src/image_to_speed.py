@@ -75,11 +75,9 @@ def image_to_speed(image_bytes):
     image = crop_image(image, xmin, ymin, xmax, ymax)
     speed_limit = get_speed_limit(image)
 
-    digits_only = re.sub(r'\D', '', speed_limit)
-
-    if digits_only == '':
+    if speed_limit == '' or speed_limit[0] == '0':
         print("No speed limit sign detected!")
         return None
     
     wait_count = 40
-    return digits_only
+    return speed_limit
