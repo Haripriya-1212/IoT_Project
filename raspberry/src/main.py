@@ -14,8 +14,11 @@ load_dotenv()
 def main():
     speed_limit = 40
     speed_lock = Lock()
+
+    test_lock = Lock()
     
     buzzer = Buzzer(17)
+    buzzer.off()
     
     url = os.getenv("CLOUDAMQP_URL")
     params = pika.URLParameters(url)
@@ -30,7 +33,6 @@ def main():
     def poll_camera_capture():
         nonlocal i, channel
 
-        capture_stream = BytesIO()
         camera = PiCamera()
         camera.start_preview()
 
@@ -38,9 +40,13 @@ def main():
         print("Stared polling Camera Capture")
 
         while(True):
+            capture_stream = BytesIO()
             camera.capture(capture_stream, 'jpeg')
             capture_stream.seek(0)
-            channel.basic_publish(exchange='', routing_key='video', body=capture_stream.read())
+
+            with test_lock:
+                channel.basic_publish(exchange='', routing_key='video', body=capture_stream.read())
+
             print(f"Published Frame: {i}")
             i = i + 1
             sleep(1)
@@ -67,21 +73,33 @@ def main():
        
     def check_speed():
         nonlocal speed_limit
+
+        spd = 20
         
         ser = serial.Serial("/dev/serial0")
         
         while True:
+            sleep(1)
+            spd = spd + 0.2
+            test = True
+
             data = (str)(ser.readline())
-            GPRMC_data = data.find('$GPMRC,')
-            
+            GPRMC_data = data.find('$GPRMC,')
+
             if(GPRMC_data > 0):
                 knots = data.split(',')[7]
-                current_speed = float(knots) * 1.852
+                # current_speed = float(knots) * 1.852
 
+                print(f"Current Speed: {spd}")
                 with speed_lock:
-                    if current_speed > speed_limit:
+                    if spd > speed_limit and test:
+                        print("Ringing buzzer")
                         ring_buzzer()
-                        channel.basic_publish(exchange='', routing_key='report', body=f'Speeding Found! Going at {current_speed} KM/H. Speed Limit is {speed_limit} KM/H')
+
+                        with test_lock:
+                            channel.basic_publish(exchange='', routing_key='report', body=f'Speeding Found! Going at {spd} KM/H. Speed Limit is {speed_limit} KM/H')
+
+                        test = False
 
 
     channel.basic_consume(queue='speed', on_message_callback=speed_callback, auto_ack=True)

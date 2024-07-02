@@ -1,9 +1,11 @@
-from PIL import Image
+from PIL import Image, ImageTk
 import pytesseract as tess
 import torch
 import numpy as np
 import cv2
 import re
+import matplotlib.pyplot as plt
+import tkinter as tk
 
 tess.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 model = torch.hub.load('ultralytics/yolov5', 'custom', path='yolov5/runs/train/exp11/weights/best.pt')
@@ -44,16 +46,25 @@ def get_speed_limit(image):
 def image_to_speed(image_bytes):
     global model, wait_count
 
-    if wait_count is not 0:
-        wait_count = wait_count - 1
-        return None
-
     image = bytes_to_cv2_image(image_bytes)
+    image = cv2.rotate(image, cv2.ROTATE_180)
+
+    b,g,r = cv2.split(image)
+    img = cv2.merge((r,g,b))
+
+    root = tk.Tk()
+    im = Image.fromarray(img)
+    imgtk = ImageTk.PhotoImage(image=im) 
+    tk.Label(root, image=imgtk).pack() 
+
+    root.mainloop()
+
     result = model(image)
     idx = get_result_index(result)
 
     if idx is None:
         print("No speed limit sign detected!")
+        return None
 
     xmin = result.pandas().xyxy[0]['xmin'][idx]
     ymin = result.pandas().xyxy[0]['ymin'][idx]
@@ -79,5 +90,6 @@ def image_to_speed(image_bytes):
         print("No speed limit sign detected!")
         return None
     
-    wait_count = 40
+    print(f"Speed Limit Found: {speed_limit} km/h")
+    
     return speed_limit

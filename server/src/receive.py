@@ -13,7 +13,7 @@ def main():
     src_email_password = os.getenv('SRC_EMAIL_PASSWORD')
     dest_email = os.getenv('DEST_EMAIL')
 
-    smtp_server = smtplib.SMTP('smtp.gmail.com', 587);
+    smtp_server = smtplib.SMTP('smtp.gmail.com', 587)
     smtp_server.starttls()
     smtp_server.login(src_email, src_email_password)
 
@@ -41,9 +41,10 @@ def main():
         msg['Subject'] = 'PiSpeedCam Report | Speed Limit Violation Detected'
         msg['From'] = src_email
         msg['To'] = dest_email
-        msg.set_content(body)
+        msg.set_content(str(body))
 
         smtp_server.send_message(msg)
+        print("Report Sent to mail!")
 
 
     channel.basic_consume(queue='video', on_message_callback=video_callback, auto_ack=True)
